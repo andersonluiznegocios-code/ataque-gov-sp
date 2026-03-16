@@ -146,7 +146,7 @@ async function renderAdmin(){
   document.getElementById('st-doc').textContent=comDoc;
   if(!total){document.getElementById('leads-list').innerHTML='<div class="empty">📭 Nenhum lead ainda.<br>Compartilhe o link para servidores de SP!</div>';return;}
   document.getElementById('leads-list').innerHTML=leads.map(l=>{
-    const isRapido=!l.cpf&&!!l.whatsapp;
+    const isRapido=!!l.whatsapp;
     return`<div class="lead-card ${isRapido?'rapido':''}" onclick="openLead(${l.id})">
       <div class="lc-top">
         <div class="lc-av">${(l.nome||'?')[0].toUpperCase()}</div>
@@ -168,14 +168,14 @@ async function renderAdmin(){
 const waSVG=`<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.857L0 24l6.335-1.521A11.944 11.944 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.65-.487-5.187-1.341l-.371-.214-3.762.904.938-3.666-.234-.389A9.946 9.946 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>`;
 
 function buildMsg(l){
-  const isRapido=!l.cpf&&!!l.whatsapp;
+  const isRapido=!!l.whatsapp;
   if(isRapido)return`🔥 *LEAD QUENTE – CARTÃO CONSIGNADO GOV SP*\n\n👤 *Nome:* ${l.nome||'—'}\n📱 *WhatsApp:* ${l.whatsapp||'—'}\n💳 *Tipo de cartão:* ${l.tipo_cartao||'—'}\n🏦 *Banco:* ${l.banco||'—'}\n⚡ *Preferiu contato direto*\n🕐 *Data/hora:* ${new Date(l.ts).toLocaleString('pt-BR')}\n\n_Lead quente via SDR Gov SP — contate agora!_`;
   return`🏛️ *NOVO LEAD – CARTÃO CONSIGNADO GOV SP*\n\n👤 *Nome:* ${l.nome||'—'}\n🪪 *CPF:* ${l.cpf||'—'}\n💳 *Tipo de cartão:* ${l.tipo_cartao||'—'}\n🏦 *Banco:* ${l.banco||'—'}\n🧾 *Tem fatura:* ${l.tem_fatura||'—'}\n💰 *Valor da fatura:* ${l.valor_fatura||'—'}\n📄 *Contracheque:* ${l.contracheque_data?'Enviado ✅':'Não enviado'}\n📊 *Extrato de margem:* ${l.extrato_data?'Enviado ✅':'Não enviado'}\n🕐 *Data/hora:* ${new Date(l.ts).toLocaleString('pt-BR')}\n\n_Lead capturado via SDR Cartão Consignado Gov SP_`;
 }
 
 function openLead(id){
   const l=(window._leads_govsp||[]).find(x=>x.id===id);if(!l)return;
-  const isRapido=!l.cpf&&!!l.whatsapp;
+  const isRapido=!!l.whatsapp;
   const url=`https://wa.me/${WA}?text=${encodeURIComponent(buildMsg(l))}`;
   document.getElementById('modal-title').textContent=isRapido?`⚡ ${l.nome||'Lead Quente'}`:(l.nome||'Ficha');
   const docSection=(dataUrl,type,name,label)=>dataUrl?`<div class="doc-wrap"><div class="doc-head"><span>📎 ${name||label}</span><a href="${dataUrl}" download="${name||label}">⬇ Baixar</a></div>${type==='application/pdf'?`<iframe src="${dataUrl}" class="doc-pdf"></iframe>`:`<img src="${dataUrl}" class="doc-img">`}</div>`:`<div class="no-doc">${label} não enviado</div>`;
@@ -190,7 +190,7 @@ function openLead(id){
     </div>`:`
     <div class="m-section"><div class="m-sec-title">Dados pessoais</div>
       <div class="m-row"><span class="m-key">Nome</span><span class="m-val">${l.nome}</span></div>
-      <div class="m-row"><span class="m-key">CPF</span><span class="m-val">${l.cpf}</span></div>
+      <div class="m-row"><span class="m-key">${l.whatsapp?'WhatsApp':'CPF'}</span><span class="m-val o">${l.whatsapp||l.cpf||'—'}</span></div>
       <div class="m-row"><span class="m-key">Registrado em</span><span class="m-val">${new Date(l.ts).toLocaleString('pt-BR')}</span></div>
     </div>
     <div class="m-section"><div class="m-sec-title">Cartão</div>
