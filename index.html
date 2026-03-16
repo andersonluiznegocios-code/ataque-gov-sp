@@ -89,6 +89,8 @@ const flow=[
   {id:'tipo_cartao',text:'Ótimo! 😊\n\nVocê possui *cartão consignado* ou *cartão benefício*?',opts:['💳 Cartão Consignado','🎁 Cartão Benefício','💳🎁 Tenho os dois','❌ Não tenho nenhum']},
   {id:'banco',text:'Em qual banco você tem o cartão?',opts:['🏦 Banco PAN','🏦 Banco BMG','🏦 Santander','🏦 Daycoval','🏦 CREDCESTA (PKL)','🏦 Outro banco']},
   {id:'rota',text:'Ótimo! Posso montar uma *simulação completa* para você agora.\n\nComo prefere continuar?',opts:['📋 Quero a simulação completa','⚡ Prefiro falar direto com a consultora']},
+  {id:'rota_nome',text:'Sem problema! Para a consultora entrar em contato, me informa seu *nome*:',input:true,placeholder:'Digite seu nome',rota_rapida:true},
+  {id:'rota_whatsapp',text:'Perfeito! E seu *número de WhatsApp* para contato:',input:true,placeholder:'(11) 9 0000-0000',rota_rapida:true},
   {id:'tem_fatura',text:'Você tem *fatura em aberto* no cartão?',opts:['✅ Sim, tenho fatura','❌ Não tenho fatura']},
   {id:'valor_fatura',text:'Qual o *valor aproximado* da fatura?',opts:['Até R$ 500','R$ 501 – R$ 1.000','R$ 1.001 – R$ 2.000','R$ 2.001 – R$ 5.000','Acima de R$ 5.000']},
   {id:'nome',text:'Agora me informe seu *nome completo*:',input:true,placeholder:'Digite seu nome completo'},
@@ -138,7 +140,7 @@ async function renderStep(s){
 function chooseOpt(val,si,oi){
   document.querySelectorAll(`[data-step="${si}"]`).forEach(b=>b.disabled=true);
   if(si===0&&oi===1){addBubble(val,'out').then(()=>showTyping(900)).then(()=>addBubble('Entendido! Nosso serviço é exclusivo para servidores estaduais de SP. Qualquer dúvida, volte aqui! 😊','in'));return;}
-  if(flow[si].id==='rota'&&oi===1){answers.rota='rápida';answers[flow[si].id]=val;addBubble(val,'out').then(()=>rotaRapida());return;}
+  if(flow[si].id==='rota'&&oi===1){answers.rota='rápida';answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step++;renderStep(step);});return;}
   answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step++;renderStep(step);});
 }
 
@@ -147,6 +149,8 @@ function sendMsg(){
   if(!val||chatBlocked)return;const node=flow[step];if(!node||!node.input)return;
   let p=val;if(node.mask==='cpf')p=maskCPF(val);
   answers[node.id]=p;inp.value='';inp.placeholder='Digite sua resposta...';
+  // Se acabou de coletar whatsapp na rota rápida, finaliza
+  if(node.id==='rota_whatsapp'){addBubble(p,'out').then(()=>rotaRapida());return;}
   addBubble(p,'out').then(()=>{step++;renderStep(step);});
 }
 
@@ -166,7 +170,7 @@ function skipUpload(uid){answers[uid]=null;document.querySelectorAll('#chat-body
 
 const waSVG=`<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.857L0 24l6.335-1.521A11.944 11.944 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.65-.487-5.187-1.341l-.371-.214-3.762.904.938-3.666-.234-.389A9.946 9.946 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>`;
 
-function buildMsgRapida(){return`🔥 *LEAD QUENTE – CARTÃO CONSIGNADO GOV SP*\n\n💳 *Tipo de cartão:* ${answers.tipo_cartao||'—'}\n🏦 *Banco:* ${answers.banco||'—'}\n⚡ *Preferiu contato direto*\n🕐 *Data/hora:* ${new Date().toLocaleString('pt-BR')}\n\n_Lead quente via SDR Gov SP — contate agora!_`}
+function buildMsgRapida(){return`🔥 *LEAD QUENTE – CARTÃO CONSIGNADO GOV SP*\n\n👤 *Nome:* ${answers.rota_nome||'—'}\n📱 *WhatsApp:* ${answers.rota_whatsapp||'—'}\n💳 *Tipo de cartão:* ${answers.tipo_cartao||'—'}\n🏦 *Banco:* ${answers.banco||'—'}\n⚡ *Preferiu contato direto*\n🕐 *Data/hora:* ${new Date().toLocaleString('pt-BR')}\n\n_Lead quente via SDR Gov SP — contate agora!_`}
 function buildMsgCompleto(l){return`🏛️ *NOVO LEAD – CARTÃO CONSIGNADO GOV SP*\n\n👤 *Nome:* ${l.nome||'—'}\n🪪 *CPF:* ${l.cpf||'—'}\n💳 *Tipo de cartão:* ${l.tipo_cartao||'—'}\n🏦 *Banco:* ${l.banco||'—'}\n🧾 *Tem fatura:* ${l.tem_fatura||'—'}\n💰 *Valor da fatura:* ${l.valor_fatura||'—'}\n📄 *Contracheque:* ${l.contracheque?'Enviado ✅':'Não enviado'}\n📊 *Extrato de margem:* ${l.extrato?'Enviado ✅':'Não enviado'}\n🕐 *Data/hora:* ${new Date().toLocaleString('pt-BR')}\n\n_Lead capturado via SDR Cartão Consignado Gov SP_`}
 
 async function salvarSupabase(l){
@@ -174,10 +178,11 @@ async function salvarSupabase(l){
 }
 
 async function rotaRapida(){
-  await salvarSupabase({tipo_cartao:answers.tipo_cartao,banco:answers.banco});
+  await salvarSupabase({nome:answers.rota_nome||null,cpf:answers.rota_whatsapp||null,tipo_cartao:answers.tipo_cartao||null,banco:answers.banco||null});
   const url=`https://wa.me/${WA}?text=${encodeURIComponent(buildMsgRapida())}`;
   await showTyping(1000);
-  await addBubble(`Sem problema! 😊 Nossa consultora vai te atender agora mesmo.<br><br><div class="success-msg"><div style="font-size:28px;margin-bottom:8px">⚡</div><div class="s-title">Conectando com a consultora!</div><div class="s-sub">Clique abaixo para iniciar o atendimento pelo WhatsApp.</div><a class="wa-cta" href="${url}" target="_blank">${waSVG} Falar com Fernanda agora</a></div>`,'in');
+  const nome=(answers.rota_nome||'').split(' ')[0]||'servidor(a)';
+  await addBubble(`Obrigada, <strong>${nome}</strong>! 😊 Nossa consultora vai entrar em contato com você em breve.<br><br><div class="success-msg"><div style="font-size:28px;margin-bottom:8px">⚡</div><div class="s-title">Contato registrado!</div><div class="s-sub">Clique abaixo para já iniciar o atendimento pelo WhatsApp.</div><a class="wa-cta" href="${url}" target="_blank">${waSVG} Falar com Fernanda agora</a></div>`,'in');
   chatBlocked=false;
 }
 
