@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cartão Consignado · Servidor do Estado de SP</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#C45000;--orange-mid:#E8650A;--orange-light:#FFF0E6;--orange-mid2:#F5B68A;--orange-text:#7A2F00;--chat-bg:#ECE5DD;--white:#fff;--gray-400:#9a9a96;--gray-900:#1a1a18;--opt-bg:#FFF0E6;--opt-border:#F5B68A;--opt-text:#7A2F00;--send:#E8650A;--font:'DM Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--chat-bg);min-height:100vh;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;min-height:100vh;display:flex;flex-direction:column;background:var(--chat-bg)}
+.wa-header{background:var(--orange);padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.wa-avatar{width:38px;height:38px;border-radius:50%;background:var(--orange-mid);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.3)}
+.wa-name{font-size:15px;font-weight:500;color:#fff;line-height:1.2}
+.wa-status{font-size:11px;color:#F5B68A}
+.wa-badge{font-size:10px;color:#F5B68A;text-align:right;line-height:1.4;margin-left:auto}
+.chat-body{flex:1;overflow-y:auto;padding:12px 10px 90px;display:flex;flex-direction:column;gap:6px;min-height:500px}
+.bubble-in{align-self:flex-start;max-width:82%}
+.bubble-out{align-self:flex-end;max-width:78%}
+.bubble{padding:8px 12px 6px;border-radius:8px;font-size:14px;line-height:1.6;color:var(--gray-900);word-break:break-word}
+.bubble-in .bubble{background:var(--white);border-top-left-radius:2px}
+.bubble-out .bubble{background:#DCF8C6;border-top-right-radius:2px}
+.bubble strong{font-weight:500}
+.bubble-time{font-size:10px;color:var(--gray-400);margin-top:2px}
+.bubble-in .bubble-time{text-align:left}
+.bubble-out .bubble-time{text-align:right}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.opt-btn{padding:9px 12px;background:var(--opt-bg);border:0.5px solid var(--opt-border);border-radius:8px;font-size:13px;color:var(--opt-text);cursor:pointer;text-align:left;font-family:var(--font);transition:background .15s;font-weight:500}
+.opt-btn:hover{background:#FDDAB8}
+.opt-btn:disabled{opacity:.45;pointer-events:none}
+.opt-btn.destaque{background:var(--orange-mid);color:#fff;border-color:var(--orange);font-weight:500}
+.opt-btn.destaque:hover{background:var(--orange)}
+.typing-indicator{display:flex;gap:4px;padding:10px 14px;background:var(--white);border-radius:8px;border-top-left-radius:2px;align-self:flex-start;width:56px}
+.typing-indicator span{width:8px;height:8px;background:#aaa;border-radius:50%;animation:bounce .9s infinite}
+.typing-indicator span:nth-child(2){animation-delay:.15s}
+.typing-indicator span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.upload-zone{border:1.5px dashed var(--opt-border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:var(--white);position:relative;transition:background .2s;margin-top:10px}
+.upload-zone:hover{background:var(--orange-light)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.up-icon{font-size:22px;margin-bottom:6px}
+.up-title{font-size:14px;font-weight:500;color:var(--orange-text)}
+.up-sub{font-size:12px;color:var(--gray-400);margin-top:3px}
+.file-attached{display:none;align-items:center;gap:8px;margin-top:8px;padding:9px 12px;background:var(--orange-light);border:0.5px solid var(--opt-border);border-radius:8px}
+.file-attached.show{display:flex}
+.fa-icon{width:32px;height:32px;border-radius:6px;background:var(--orange-mid);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.fa-name{font-size:12px;font-weight:500;color:var(--orange-text);word-break:break-all}
+.fa-size{font-size:10px;color:var(--gray-400)}
+.chat-input-area{background:#F0F0F0;padding:8px 10px;display:flex;align-items:center;gap:8px;position:sticky;bottom:0;z-index:10}
+.chat-input{flex:1;height:40px;border-radius:20px;border:none;padding:0 14px;font-size:14px;font-family:var(--font);background:var(--white);outline:none;color:var(--gray-900)}
+.send-btn{width:40px;height:40px;border-radius:50%;background:var(--send);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:hover{background:var(--orange)}
+.success-msg{background:var(--orange-light);border:0.5px solid var(--orange-mid2);border-radius:12px;padding:16px;text-align:center;margin-top:8px}
+.s-title{font-size:16px;font-weight:500;color:var(--orange-text);margin-bottom:4px}
+.s-sub{font-size:13px;color:var(--orange-text);opacity:.8;line-height:1.5;margin-bottom:12px}
+.wa-cta{display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;padding:11px 20px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="wa-header">
+    <div class="wa-avatar">F</div>
+    <div style="flex:1">
+      <div class="wa-name">Fernanda · Cartão Consignado</div>
+      <div class="wa-status">online agora</div>
+    </div>
+    <div class="wa-badge">Servidor Estadual<br>Governo SP</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column">
+    <div class="chat-body" id="chat-body"></div>
+    <div class="chat-input-area">
+      <input class="chat-input" id="chat-input" placeholder="Digite sua resposta..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="send-btn" onclick="sendMsg()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+const SUPA_URL='https://urtzujmnjndynenunhtx.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVydHp1am1uam5keW5lbnVuaHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzY4MDAsImV4cCI6MjA4OTI1MjgwMH0.RxINh9uF1L8H3XCmyLE6SzfhvpYiy69kTJhINKIeQRg';
+const WA='5511986968488';
+
+const flow=[
+  {id:'start',text:'Olá! 👋 Sou a *Fernanda*, especialista em cartão consignado para servidores do Estado de São Paulo.\n\nVocê é servidor(a) estadual ativo(a) ou aposentado(a) do *Governo de SP*?',opts:['✅ Sim, sou servidor(a) do Estado de SP','❌ Não sou servidor(a) estadual']},
+  {id:'tipo_cartao',text:'Ótimo! 😊\n\nVocê possui *cartão consignado* ou *cartão benefício*?',opts:['💳 Cartão Consignado','🎁 Cartão Benefício','💳🎁 Tenho os dois','❌ Não tenho nenhum']},
+  {id:'banco',text:'Em qual banco você tem o cartão?',opts:['🏦 Banco PAN','🏦 Banco BMG','🏦 Santander','🏦 Daycoval','🏦 CREDCESTA (PKL)','🏦 Outro banco']},
+  {id:'rota',text:'Ótimo! Posso montar uma *simulação completa* para você agora.\n\nComo prefere continuar?',opts:['📋 Quero a simulação completa','⚡ Prefiro falar direto com a consultora']},
+  {id:'tem_fatura',text:'Você tem *fatura em aberto* no cartão?',opts:['✅ Sim, tenho fatura','❌ Não tenho fatura']},
+  {id:'valor_fatura',text:'Qual o *valor aproximado* da fatura?',opts:['Até R$ 500','R$ 501 – R$ 1.000','R$ 1.001 – R$ 2.000','R$ 2.001 – R$ 5.000','Acima de R$ 5.000']},
+  {id:'nome',text:'Agora me informe seu *nome completo*:',input:true,placeholder:'Digite seu nome completo'},
+  {id:'cpf',text:'Obrigada, *{nome}*! 😊\n\nMe informe seu *CPF*:',input:true,placeholder:'000.000.000-00',mask:'cpf'},
+  {id:'contracheque',text:'Para a simulação preciso de dois documentos.\n\n*1️⃣ Contracheque* mais recente:',upload:true,uploadId:'contracheque',uploadLabel:'📄 Enviar Contracheque'},
+  {id:'extrato',text:'*2️⃣ Extrato de Margem ATUALIZADO*\n\nGerado no portal do servidor do Governo SP:',upload:true,uploadId:'extrato',uploadLabel:'📊 Enviar Extrato de Margem'},
+  {id:'fim',final:true}
+];
+
+let step=0,answers={},chatBlocked=false;
+let uploads={contracheque:{dataUrl:null,type:null,name:null},extrato:{dataUrl:null,type:null,name:null}};
+
+function now(){return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+function fmtText(t){return t.replace(/\*(.+?)\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>').replace(/\{nome\}/g,answers.nome?answers.nome.split(' ')[0]:'')}
+function scrollChat(){const b=document.getElementById('chat-body');b.scrollTop=b.scrollHeight}
+function escQ(s){return s.replace(/'/g,"\\'")}
+function addBubble(html,side){return new Promise(res=>{setTimeout(()=>{const w=document.createElement('div');w.className=side==='in'?'bubble-in':'bubble-out';w.innerHTML=`<div class="bubble">${html}</div><div class="bubble-time">${now()}</div>`;document.getElementById('chat-body').appendChild(w);scrollChat();res();},0);})}
+function showTyping(d=1100){return new Promise(res=>{const el=document.createElement('div');el.className='bubble-in';el.id='typing';el.innerHTML='<div class="typing-indicator"><span></span><span></span><span></span></div>';document.getElementById('chat-body').appendChild(el);scrollChat();setTimeout(()=>{const t=document.getElementById('typing');if(t)t.remove();res();},d);})}
+
+async function renderStep(s){
+  chatBlocked=true;const node=flow[s];if(!node)return;
+  if(node.final){await finalize();return;}
+  await showTyping();
+  if(node.id==='tem_fatura'&&answers.tipo_cartao==='❌ Não tenho nenhum'){answers.tem_fatura='Sem cartão';answers.valor_fatura='—';step+=2;renderStep(step);return;}
+  if(node.id==='valor_fatura'&&answers.tem_fatura==='❌ Não tenho fatura'){answers.valor_fatura='Sem fatura';step++;renderStep(step);return;}
+  if(node.upload){
+    const uid=node.uploadId;
+    await addBubble(`${fmtText(node.text)}<div class="upload-zone"><input type="file" id="file-${uid}" accept="image/*,.pdf" onchange="handleFile(this,'${uid}')"><div class="up-icon">📎</div><div class="up-title">${node.uploadLabel}</div><div class="up-sub">Foto ou PDF · máx. 10MB</div></div><div class="file-attached" id="fa-${uid}"><div class="fa-icon">📄</div><div><div class="fa-name" id="fan-${uid}"></div><div class="fa-size" id="fas-${uid}"></div></div></div><div class="opts" style="margin-top:10px"><button class="opt-btn" id="btn-confirm-${uid}" style="display:none" onclick="confirmUpload('${uid}')">✅ Confirmar envio</button><button class="opt-btn" onclick="skipUpload('${uid}')">⏭️ Pular por agora</button></div>`,'in');
+    chatBlocked=false;return;
+  }
+  if(node.opts){
+    const html=node.opts.map((o,i)=>{
+      const extra=(node.id==='rota'&&i===1)?'destaque':'';
+      return`<button class="opt-btn ${extra}" data-step="${s}" onclick="chooseOpt('${escQ(o)}',${s},${i})">${o}</button>`;
+    }).join('');
+    await addBubble(fmtText(node.text)+`<div class="opts">${html}</div>`,'in');
+    chatBlocked=false;return;
+  }
+  if(node.input){
+    await addBubble(fmtText(node.text),'in');
+    const inp=document.getElementById('chat-input');inp.placeholder=node.placeholder||'Digite aqui...';inp.disabled=false;inp.focus();
+    chatBlocked=false;return;
+  }
+  await addBubble(fmtText(node.text),'in');chatBlocked=false;
+}
+
+function chooseOpt(val,si,oi){
+  document.querySelectorAll(`[data-step="${si}"]`).forEach(b=>b.disabled=true);
+  if(si===0&&oi===1){addBubble(val,'out').then(()=>showTyping(900)).then(()=>addBubble('Entendido! Nosso serviço é exclusivo para servidores estaduais de SP. Qualquer dúvida, volte aqui! 😊','in'));return;}
+  if(flow[si].id==='rota'&&oi===1){answers.rota='rápida';answers[flow[si].id]=val;addBubble(val,'out').then(()=>rotaRapida());return;}
+  answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step++;renderStep(step);});
+}
+
+function sendMsg(){
+  const inp=document.getElementById('chat-input');const val=inp.value.trim();
+  if(!val||chatBlocked)return;const node=flow[step];if(!node||!node.input)return;
+  let p=val;if(node.mask==='cpf')p=maskCPF(val);
+  answers[node.id]=p;inp.value='';inp.placeholder='Digite sua resposta...';
+  addBubble(p,'out').then(()=>{step++;renderStep(step);});
+}
+
+function maskCPF(v){v=v.replace(/\D/g,'').slice(0,11);return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4').replace(/(\d{3})(\d{3})(\d{1,3})$/,'$1.$2.$3').replace(/(\d{3})(\d{1,3})$/,'$1.$2')}
+
+function handleFile(input,uid){
+  const file=input.files[0];if(!file)return;
+  uploads[uid]={dataUrl:null,type:file.type,name:file.name};
+  document.getElementById('fan-'+uid).textContent=file.name;
+  document.getElementById('fas-'+uid).textContent=(file.size/1024).toFixed(0)+' KB';
+  document.getElementById('fa-'+uid).classList.add('show');
+  document.getElementById('btn-confirm-'+uid).style.display='block';
+  const r=new FileReader();r.onload=e=>{uploads[uid].dataUrl=e.target.result;};r.readAsDataURL(file);
+}
+function confirmUpload(uid){if(!uploads[uid].dataUrl)return;answers[uid]=uploads[uid];document.getElementById('btn-confirm-'+uid).disabled=true;document.querySelectorAll('#chat-body .opt-btn').forEach(b=>b.disabled=true);addBubble('📎 '+uploads[uid].name+' enviado ✅','out').then(()=>{step++;renderStep(step);});}
+function skipUpload(uid){answers[uid]=null;document.querySelectorAll('#chat-body .opt-btn').forEach(b=>b.disabled=true);addBubble('⏭️ Pular por agora','out').then(()=>{step++;renderStep(step);});}
+
+const waSVG=`<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.532 5.857L0 24l6.335-1.521A11.944 11.944 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.65-.487-5.187-1.341l-.371-.214-3.762.904.938-3.666-.234-.389A9.946 9.946 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>`;
+
+function buildMsgRapida(){return`🔥 *LEAD QUENTE – CARTÃO CONSIGNADO GOV SP*\n\n💳 *Tipo de cartão:* ${answers.tipo_cartao||'—'}\n🏦 *Banco:* ${answers.banco||'—'}\n⚡ *Preferiu contato direto*\n🕐 *Data/hora:* ${new Date().toLocaleString('pt-BR')}\n\n_Lead quente via SDR Gov SP — contate agora!_`}
+function buildMsgCompleto(l){return`🏛️ *NOVO LEAD – CARTÃO CONSIGNADO GOV SP*\n\n👤 *Nome:* ${l.nome||'—'}\n🪪 *CPF:* ${l.cpf||'—'}\n💳 *Tipo de cartão:* ${l.tipo_cartao||'—'}\n🏦 *Banco:* ${l.banco||'—'}\n🧾 *Tem fatura:* ${l.tem_fatura||'—'}\n💰 *Valor da fatura:* ${l.valor_fatura||'—'}\n📄 *Contracheque:* ${l.contracheque?'Enviado ✅':'Não enviado'}\n📊 *Extrato de margem:* ${l.extrato?'Enviado ✅':'Não enviado'}\n🕐 *Data/hora:* ${new Date().toLocaleString('pt-BR')}\n\n_Lead capturado via SDR Cartão Consignado Gov SP_`}
+
+async function salvarSupabase(l){
+  try{await fetch(`${SUPA_URL}/rest/v1/leads_govsp`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},body:JSON.stringify({nome:l.nome||null,cpf:l.cpf||null,tipo_cartao:l.tipo_cartao||null,banco:l.banco||null,tem_fatura:l.tem_fatura||null,valor_fatura:l.valor_fatura||null,contracheque_name:l.contracheque?.name||null,contracheque_type:l.contracheque?.type||null,contracheque_data:l.contracheque?.dataUrl||null,extrato_name:l.extrato?.name||null,extrato_type:l.extrato?.type||null,extrato_data:l.extrato?.dataUrl||null})});}catch(e){console.error(e);}
+}
+
+async function rotaRapida(){
+  await salvarSupabase({tipo_cartao:answers.tipo_cartao,banco:answers.banco});
+  const url=`https://wa.me/${WA}?text=${encodeURIComponent(buildMsgRapida())}`;
+  await showTyping(1000);
+  await addBubble(`Sem problema! 😊 Nossa consultora vai te atender agora mesmo.<br><br><div class="success-msg"><div style="font-size:28px;margin-bottom:8px">⚡</div><div class="s-title">Conectando com a consultora!</div><div class="s-sub">Clique abaixo para iniciar o atendimento pelo WhatsApp.</div><a class="wa-cta" href="${url}" target="_blank">${waSVG} Falar com Fernanda agora</a></div>`,'in');
+  chatBlocked=false;
+}
+
+async function finalize(){
+  const lead={nome:answers.nome||null,cpf:answers.cpf||null,tipo_cartao:answers.tipo_cartao||null,banco:answers.banco||null,tem_fatura:answers.tem_fatura||null,valor_fatura:answers.valor_fatura||null,contracheque:answers.contracheque||null,extrato:answers.extrato||null};
+  await salvarSupabase(lead);
+  const url=`https://wa.me/${WA}?text=${encodeURIComponent(buildMsgCompleto(lead))}`;
+  const nome=(answers.nome||'').split(' ')[0]||'servidor(a)';
+  await showTyping(1200);
+  await addBubble(`<strong>${nome}</strong>, tudo registrado! 🎉<br><br>Nossa equipe vai entrar em contato em breve.<br><br><div class="success-msg"><div style="font-size:28px;margin-bottom:8px">✅</div><div class="s-title">Solicitação registrada com sucesso!</div><div class="s-sub">Clique abaixo para falar com nossa consultora e agilizar sua análise.</div><a class="wa-cta" href="${url}" target="_blank">${waSVG} Falar com Fernanda agora</a></div>`,'in');
+  chatBlocked=false;
+}
+renderStep(0);
+</script>
+</body>
+</html>
