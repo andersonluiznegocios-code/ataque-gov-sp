@@ -174,11 +174,11 @@ function buildMsgRapida(){return`🔥 *LEAD QUENTE – CARTÃO CONSIGNADO GOV SP
 function buildMsgCompleto(l){return`🏛️ *NOVO LEAD – CARTÃO CONSIGNADO GOV SP*\n\n👤 *Nome:* ${l.nome||'—'}\n🪪 *CPF:* ${l.cpf||'—'}\n💳 *Tipo de cartão:* ${l.tipo_cartao||'—'}\n🏦 *Banco:* ${l.banco||'—'}\n🧾 *Tem fatura:* ${l.tem_fatura||'—'}\n💰 *Valor da fatura:* ${l.valor_fatura||'—'}\n📄 *Contracheque:* ${l.contracheque?'Enviado ✅':'Não enviado'}\n📊 *Extrato de margem:* ${l.extrato?'Enviado ✅':'Não enviado'}\n🕐 *Data/hora:* ${new Date().toLocaleString('pt-BR')}\n\n_Lead capturado via SDR Cartão Consignado Gov SP_`}
 
 async function salvarSupabase(l){
-  try{await fetch(`${SUPA_URL}/rest/v1/leads_govsp`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},body:JSON.stringify({nome:l.nome||null,cpf:l.cpf||null,tipo_cartao:l.tipo_cartao||null,banco:l.banco||null,tem_fatura:l.tem_fatura||null,valor_fatura:l.valor_fatura||null,contracheque_name:l.contracheque?.name||null,contracheque_type:l.contracheque?.type||null,contracheque_data:l.contracheque?.dataUrl||null,extrato_name:l.extrato?.name||null,extrato_type:l.extrato?.type||null,extrato_data:l.extrato?.dataUrl||null})});}catch(e){console.error(e);}
+  try{await fetch(`${SUPA_URL}/rest/v1/leads_govsp`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},body:JSON.stringify({nome:l.nome||null,cpf:l.cpf||null,whatsapp:l.whatsapp||null,tipo_cartao:l.tipo_cartao||null,banco:l.banco||null,tem_fatura:l.tem_fatura||null,valor_fatura:l.valor_fatura||null,contracheque_name:l.contracheque?.name||null,contracheque_type:l.contracheque?.type||null,contracheque_data:l.contracheque?.dataUrl||null,extrato_name:l.extrato?.name||null,extrato_type:l.extrato?.type||null,extrato_data:l.extrato?.dataUrl||null})});}catch(e){console.error(e);}
 }
 
 async function rotaRapida(){
-  await salvarSupabase({nome:answers.rota_nome||null,cpf:answers.rota_whatsapp||null,tipo_cartao:answers.tipo_cartao||null,banco:answers.banco||null});
+  await salvarSupabase({nome:answers.rota_nome||null,whatsapp:answers.rota_whatsapp||null,tipo_cartao:answers.tipo_cartao||null,banco:answers.banco||null});
   const url=`https://wa.me/${WA}?text=${encodeURIComponent(buildMsgRapida())}`;
   await showTyping(1000);
   const nome=(answers.rota_nome||'').split(' ')[0]||'servidor(a)';
