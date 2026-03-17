@@ -141,6 +141,8 @@ function chooseOpt(val,si,oi){
   document.querySelectorAll(`[data-step="${si}"]`).forEach(b=>b.disabled=true);
   if(si===0&&oi===1){addBubble(val,'out').then(()=>showTyping(900)).then(()=>addBubble('Entendido! Nosso serviço é exclusivo para servidores estaduais de SP. Qualquer dúvida, volte aqui! 😊','in'));return;}
   if(flow[si].id==='rota'&&oi===1){answers.rota='rápida';answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step++;renderStep(step);});return;}
+  // Rota completa — pula os steps da rota rápida (rota_nome e rota_whatsapp)
+  if(flow[si].id==='rota'&&oi===0){answers.rota='completa';answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step+=3;renderStep(step);});return;}
   answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step++;renderStep(step);});
 }
 
