@@ -86,15 +86,16 @@ const WA='5511986968488';
 
 const flow=[
   {id:'start',text:'Olá! 👋 Sou a *Fernanda*, especialista em cartão consignado para servidores do Estado de São Paulo.\n\nVocê é servidor(a) estadual ativo(a) ou aposentado(a) do *Governo de SP*?',opts:['✅ Sim, sou servidor(a) do Estado de SP','❌ Não sou servidor(a) estadual']},
-  {id:'tipo_cartao',text:'Ótimo! 😊\n\nVocê possui *cartão consignado* ou *cartão benefício*?',opts:['💳 Cartão Consignado','🎁 Cartão Benefício','💳🎁 Tenho os dois','❌ Não tenho nenhum']},
+  {id:'nome',text:'Ótimo! 😊 Para começarmos, qual é o seu *nome completo*?',input:true,placeholder:'Digite seu nome completo'},
+  {id:'whatsapp',text:'Obrigada, *{nome}*! E seu *WhatsApp* para contato:',input:true,placeholder:'(11) 9 0000-0000'},
+  {id:'tipo_cartao',text:'Você possui *cartão consignado* ou *cartão benefício*?',opts:['💳 Cartão Consignado','🎁 Cartão Benefício','💳🎁 Tenho os dois','❌ Não tenho nenhum']},
   {id:'banco',text:'Em qual banco você tem o cartão?',opts:['🏦 Banco PAN','🏦 Banco BMG','🏦 Santander','🏦 Daycoval','🏦 CREDCESTA (PKL)','🏦 Outro banco']},
   {id:'rota',text:'Ótimo! Posso montar uma *simulação completa* para você agora.\n\nComo prefere continuar?',opts:['📋 Quero a simulação completa','⚡ Prefiro falar direto com a consultora']},
-  {id:'rota_nome',text:'Sem problema! Para a consultora entrar em contato, me informa seu *nome*:',input:true,placeholder:'Digite seu nome',rota_rapida:true},
-  {id:'rota_whatsapp',text:'Perfeito! E seu *número de WhatsApp* para contato:',input:true,placeholder:'(11) 9 0000-0000',rota_rapida:true},
+  {id:'rota_nome',text:'Para a consultora entrar em contato, confirme seu *nome*:',input:true,placeholder:'Digite seu nome',rota_rapida:true},
+  {id:'rota_whatsapp',text:'E confirme seu *WhatsApp*:',input:true,placeholder:'(11) 9 0000-0000',rota_rapida:true},
   {id:'tem_fatura',text:'Você tem *fatura em aberto* no cartão?',opts:['✅ Sim, tenho fatura','❌ Não tenho fatura']},
   {id:'valor_fatura',text:'Qual o *valor aproximado* da fatura?',opts:['Até R$ 500','R$ 501 – R$ 1.000','R$ 1.001 – R$ 2.000','R$ 2.001 – R$ 5.000','Acima de R$ 5.000']},
-  {id:'nome',text:'Agora me informe seu *nome completo*:',input:true,placeholder:'Digite seu nome completo'},
-  {id:'cpf',text:'Obrigada, *{nome}*! 😊\n\nMe informe seu *CPF*:',input:true,placeholder:'000.000.000-00',mask:'cpf'},
+  {id:'cpf',text:'Me informe seu *CPF*:',input:true,placeholder:'000.000.000-00',mask:'cpf'},
   {id:'contracheque',text:'Para a simulação preciso de dois documentos.\n\n*1️⃣ Contracheque* mais recente:',upload:true,uploadId:'contracheque',uploadLabel:'📄 Enviar Contracheque'},
   {id:'extrato',text:'*2️⃣ Extrato de Margem ATUALIZADO*\n\nGerado no portal do servidor do Governo SP:',upload:true,uploadId:'extrato',uploadLabel:'📊 Enviar Extrato de Margem'},
   {id:'fim',final:true}
@@ -137,9 +138,26 @@ async function renderStep(s){
   await addBubble(fmtText(node.text),'in');chatBlocked=false;
 }
 
+let leadId=null;
+
+async function criarLeadVazio(){
+  try{
+    const res=await fetch(`${SUPA_URL}/rest/v1/leads_govsp`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'},body:JSON.stringify({nome:'Aguardando...',whatsapp:'—'})});
+    const data=await res.json();
+    if(data&&data[0]&&data[0].id)leadId=data[0].id;
+  }catch(e){console.error(e);}
+}
+
+async function atualizarLead(campos){
+  if(!leadId)return;
+  try{await fetch(`${SUPA_URL}/rest/v1/leads_govsp?id=eq.${leadId}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},body:JSON.stringify(campos)});}catch(e){console.error(e);}
+}
+
 function chooseOpt(val,si,oi){
   document.querySelectorAll(`[data-step="${si}"]`).forEach(b=>b.disabled=true);
   if(si===0&&oi===1){addBubble(val,'out').then(()=>showTyping(900)).then(()=>addBubble('Entendido! Nosso serviço é exclusivo para servidores estaduais de SP. Qualquer dúvida, volte aqui! 😊','in'));return;}
+  // É servidor — salva imediatamente
+  if(si===0&&oi===0){answers[flow[si].id]=val;criarLeadVazio();addBubble(val,'out').then(()=>{step++;renderStep(step);});return;}
   if(flow[si].id==='rota'&&oi===1){answers.rota='rápida';answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step++;renderStep(step);});return;}
   // Rota completa — pula os steps da rota rápida (rota_nome e rota_whatsapp)
   if(flow[si].id==='rota'&&oi===0){answers.rota='completa';answers[flow[si].id]=val;addBubble(val,'out').then(()=>{step+=3;renderStep(step);});return;}
@@ -151,7 +169,8 @@ function sendMsg(){
   if(!val||chatBlocked)return;const node=flow[step];if(!node||!node.input)return;
   let p=val;if(node.mask==='cpf')p=maskCPF(val);
   answers[node.id]=p;inp.value='';inp.placeholder='Digite sua resposta...';
-  // Se acabou de coletar whatsapp na rota rápida, finaliza
+  if(node.id==='nome'){atualizarLead({nome:p});addBubble(p,'out').then(()=>{step++;renderStep(step);});return;}
+  if(node.id==='whatsapp'){atualizarLead({whatsapp:p});addBubble(p,'out').then(()=>{step++;renderStep(step);});return;}
   if(node.id==='rota_whatsapp'){addBubble(p,'out').then(()=>rotaRapida());return;}
   addBubble(p,'out').then(()=>{step++;renderStep(step);});
 }
